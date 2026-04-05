@@ -24,10 +24,6 @@ The project is designed with a focus on modern UI/UX principles, seamless naviga
 <img width="300" height="795" alt="image" src="https://github.com/user-attachments/assets/025b84b3-ab86-4fd2-af7a-2a74c9c9db76" />
 <img width="300" height="787" alt="image" src="https://github.com/user-attachments/assets/fedfd7c3-fbc1-4c74-af9e-9fb2b0b248e2" />
 
-<p align="center">
-  <i>Add your application screenshots here via GitHub editor!</i>
-</p>
-
 ---
 
 ## 🛠️ Technologies & Architecture
@@ -54,5 +50,7 @@ To run this e-commerce project on your local machine, follow these steps:
    flutter run
    
 (Make sure you have an emulator running or a physical device connected).
+
+---
 
 Author: Ömer Faruk AY
