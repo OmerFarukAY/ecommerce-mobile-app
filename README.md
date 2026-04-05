@@ -1,4 +1,4 @@
-<img width="366" height="787" alt="image" src="https://github.com/user-attachments/assets/bdc24544-abb2-408b-a294-343161d86563" /># 🛒 Flutter E-Commerce Application
+# 🛒 Flutter E-Commerce Application
 
 <p align="left">
   <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
@@ -20,9 +20,9 @@ The project is designed with a focus on modern UI/UX principles, seamless naviga
 ---
 
 ## 🎨 UI Previews
-<img width="371" height="793" alt="image" src="https://github.com/user-attachments/assets/1f946311-d369-47f9-937d-61ec9ab81383" />
-<img width="371" height="795" alt="image" src="https://github.com/user-attachments/assets/025b84b3-ab86-4fd2-af7a-2a74c9c9db76" />
-<img width="366" height="787" alt="image" src="https://github.com/user-attachments/assets/fedfd7c3-fbc1-4c74-af9e-9fb2b0b248e2" />
+<img width="300" height="793" alt="image" src="https://github.com/user-attachments/assets/1f946311-d369-47f9-937d-61ec9ab81383" />
+<img width="300" height="795" alt="image" src="https://github.com/user-attachments/assets/025b84b3-ab86-4fd2-af7a-2a74c9c9db76" />
+<img width="300" height="787" alt="image" src="https://github.com/user-attachments/assets/fedfd7c3-fbc1-4c74-af9e-9fb2b0b248e2" />
 
 <p align="center">
   <i>Add your application screenshots here via GitHub editor!</i>
