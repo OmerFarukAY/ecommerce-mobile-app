@@ -20,9 +20,9 @@ The project is designed with a focus on modern UI/UX principles, seamless naviga
 ---
 
 ## 🎨 UI Previews
-<img width="290" height="750" alt="image" src="https://github.com/user-attachments/assets/1f946311-d369-47f9-937d-61ec9ab81383" />
-<img width="290" height="750" alt="image" src="https://github.com/user-attachments/assets/025b84b3-ab86-4fd2-af7a-2a74c9c9db76" />
-<img width="290" height="750" alt="image" src="https://github.com/user-attachments/assets/fedfd7c3-fbc1-4c74-af9e-9fb2b0b248e2" />
+<img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/1f946311-d369-47f9-937d-61ec9ab81383" />
+<img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/025b84b3-ab86-4fd2-af7a-2a74c9c9db76" />
+<img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/fedfd7c3-fbc1-4c74-af9e-9fb2b0b248e2" />
 
 ---
 
