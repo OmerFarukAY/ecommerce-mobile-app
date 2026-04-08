@@ -1,4 +1,5 @@
-import 'dart:convert'; // <--- 1. BU EKLENDİ (Base64 decode için)
+import 'dart:async'; // Timer için eklendi
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:task1/auth_service.dart';
 import 'package:task1/ayarlar_sayfasi.dart';
@@ -17,11 +18,77 @@ void main() {
   ));
 }
 
-class AnaSayfa extends StatelessWidget {
+class AnaSayfa extends StatefulWidget {
   const AnaSayfa({Key? key}) : super(key: key);
 
+  @override
+  State<AnaSayfa> createState() => _AnaSayfaState();
+}
+
+class _AnaSayfaState extends State<AnaSayfa> {
   final Color gradientStart = const Color(0xFF560027);
   final Color gradientEnd = const Color(0xFFC2185B);
+
+  // --- SLIDER (CAROUSEL) KONTROLCÜLERİ ---
+  final PageController _pageController = PageController();
+  Timer? _timer;
+  int _currentPage = 0;
+
+  // En Çok Satanlar Slider Verileri
+  final List<Map<String, String>> _carouselItems = [
+    {
+      "image": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "title": "En Çok Satanlar",
+      "subtitle": "Koleksiyonu Keşfet"
+    },
+    {
+      "image": "https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "title": "Klasik Saatler",
+      "subtitle": "Zamana Şıklık Katın"
+    },
+    {
+      "image": "https://images.unsplash.com/photo-1591561954557-26941169b49e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "title": "Yeni Gelenler",
+      "subtitle": "Sınırlı Stok Fırsatı"
+    },
+    {
+      "image": "https://cdn.britannica.com/77/170477-050-1C747EE3/Laptop-computer.jpg",
+      "title": "Teknoloji Fırsatları",
+      "subtitle": "İşinize Güç Katın"
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoPlay();
+  }
+
+  // Her 3 saniyede bir otomatik kaydırma fonksiyonu
+  void _startAutoPlay() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+      if (_currentPage < _carouselItems.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0; // Sona gelince başa dön
+      }
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Bellek sızıntısını önlemek için timer'ı iptal et
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,21 +102,19 @@ class AnaSayfa extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  // --- DRAWER BAŞLIĞI (GÜNCELLENDİ) ---
                   FutureBuilder<Map<String, dynamic>?>(
                     future: AuthService().getProfile(),
                     builder: (context, snapshot) {
                       String name = "Misafir";
                       String email = "misafir@ornek.com";
-                      String? base64Image; // Resim verisi
+                      String? base64Image;
 
                       if (snapshot.hasData && snapshot.data != null) {
                         name = snapshot.data!['fullName'] ?? "Kullanıcı";
                         email = snapshot.data!['email'] ?? "";
-                        base64Image = snapshot.data!['profileImage']; // Backend'den resmi al
+                        base64Image = snapshot.data!['profileImage'];
                       }
 
-                      // Resim Provider Hazırlığı
                       ImageProvider? imageProvider;
                       if (base64Image != null && base64Image.isNotEmpty) {
                         try {
@@ -74,7 +139,6 @@ class AnaSayfa extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // 1. Profil Fotoğrafı (Güncellendi)
                               Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 decoration: BoxDecoration(
@@ -84,22 +148,19 @@ class AnaSayfa extends StatelessWidget {
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.2),
                                         blurRadius: 8,
-                                        offset: Offset(0, 3),
+                                        offset: const Offset(0, 3),
                                       )
                                     ]
                                 ),
                                 child: CircleAvatar(
                                   radius: 40,
-                                  backgroundColor: Colors.white, // Resim yoksa beyaz zemin
-                                  backgroundImage: imageProvider, // Resim varsa koy
-                                  // Resim yoksa ikon koy (Instagram tarzı için gri ikon)
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: imageProvider,
                                   child: (imageProvider == null)
                                       ? Icon(Icons.person, size: 50, color: Colors.grey[400])
                                       : null,
                                 ),
                               ),
-
-                              // 2. İsim
                               Text(
                                 name,
                                 style: const TextStyle(
@@ -108,8 +169,6 @@ class AnaSayfa extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-
-                              // 3. E-posta
                               const SizedBox(height: 5),
                               Text(
                                 email,
@@ -124,105 +183,113 @@ class AnaSayfa extends StatelessWidget {
                       );
                     },
                   ),
-                  SizedBox(height: 25,),
-                  // ... Menü elemanları aynı kalacak ...
+                  const SizedBox(height: 25),
                   ListTile(
-                    leading: _buildIconsColor(Icons.shopping_cart, "Sepet"),
-                    title: Text('Sepet'),
+                    leading: _buildIconsColor(Icons.store, "Tüm Kategoriler"),
+                    title: const Text('Tüm Kategoriler'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => SepetSayfasi()),
+                        MaterialPageRoute(builder: (context) => const SepetSayfasi()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: _buildIconsColor(Icons.shopping_cart, "Sepet"),
+                    title: const Text('Sepet'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SepetSayfasi()),
                       );
                     },
                   ),
                   ListTile(
                     leading: _buildIconsColor(Icons.favorite, "Favoriler"),
-                    title: Text('Favoriler'),
+                    title: const Text('Favoriler'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => FavorilerSayfasi()),
+                        MaterialPageRoute(builder: (context) => const FavorilerSayfasi()),
                       );
                     },
                   ),
                   ListTile(
                     leading: _buildIconsColor(Icons.notifications, "Bildirimler"),
-                    title: Text('Bildirimler'),
+                    title: const Text('Bildirimler'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => BildirimlerSayfasi()),
+                        MaterialPageRoute(builder: (context) => const BildirimlerSayfasi()),
                       );
                     },
                   ),
                   ListTile(
                     leading: _buildIconsColor(Icons.person, "Profil"),
-                    title: Text('Profil'),
+                    title: const Text('Profil'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ProfilSayfasi()),
+                        MaterialPageRoute(builder: (context) => const ProfilSayfasi()),
                       );
                     },
                   ),
                   ListTile(
                     leading: _buildIconsColor(Icons.info, "Hakkımızda"),
-                    title: Text('Hakkımızda'),
+                    title: const Text('Hakkımızda'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => HakkimizdaSayfasi()),
+                        MaterialPageRoute(builder: (context) => const HakkimizdaSayfasi()),
                       );
                     },
                   ),
                   ListTile(
                     leading: _buildIconsColor(Icons.help, "Yardım ve Destek"),
-                    title: Text('Yardım ve Destek'),
+                    title: const Text('Yardım ve Destek'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => IletisimSayfasi()),
+                        MaterialPageRoute(builder: (context) => const IletisimSayfasi()),
                       );
                     },
                   ),
                   ListTile(
                     leading:_buildIconsColor(Icons.settings, "Ayarlar"),
-                    title: Text('Ayarlar'),
+                    title: const Text('Ayarlar'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => AyarlarSayfasi()),
+                        MaterialPageRoute(builder: (context) => const AyarlarSayfasi()),
                       );
                     },
                   ),
                 ],
               ),
             ),
-            Divider(height: 1, color: Colors.grey),
+            const Divider(height: 1, color: Colors.grey),
             ListTile(
               leading:_buildIconsColor(Icons.exit_to_app,"Çıkış Yap"),
-              title: Text("Çıkış Yap"),
+              title: const Text("Çıkış Yap"),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
             ),
-            SizedBox(height: 25),
+            const SizedBox(height: 25),
           ],
         ),
       ),
-      // ... Body kısmı (Hoşgeldin mesajı vb.) olduğu gibi kalabilir ...
-      // (Kalan kodlar önceki ana_sayfa.dart ile aynı)
       body: Stack(
         children: [
           Container(
@@ -233,7 +300,6 @@ class AnaSayfa extends StatelessWidget {
                 end: Alignment.centerLeft,
                 colors: [gradientStart, gradientEnd],
               ),
-
             ),
           ),
           SafeArea(
@@ -241,13 +307,13 @@ class AnaSayfa extends StatelessWidget {
             child: Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Builder(
                         builder: (context) => IconButton(
-                          icon: Icon(Icons.menu, color: Colors.white, size: 28),
+                          icon: const Icon(Icons.menu, color: Colors.white, size: 28),
                           onPressed: () => Scaffold.of(context).openDrawer(),
                         ),
                       ),
@@ -257,11 +323,11 @@ class AnaSayfa extends StatelessWidget {
                         height: 80,
                       ),
                       IconButton(
-                        icon: Icon(Icons.shopping_cart, color: Colors.white, size: 28),
+                        icon: const Icon(Icons.shopping_cart, color: Colors.white, size: 28),
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SepetSayfasi()),
+                            MaterialPageRoute(builder: (context) => const SepetSayfasi()),
                           );
                         },
                       ),
@@ -269,7 +335,7 @@ class AnaSayfa extends StatelessWidget {
                   ),
                 ),
 
-                //HOŞ GELDİN YAZISI (BACKEND)
+                // HOŞ GELDİN YAZISI (BACKEND)
                 FutureBuilder<Map<String, dynamic>?>(
                   future: AuthService().getProfile(),
                   builder: (context, snapshot) {
@@ -305,17 +371,16 @@ class AnaSayfa extends StatelessWidget {
                   },
                 ),
 
-                // ... Arama çubuğu ve grid yapısı aynen devam ...
-                // --- ARAMA ÇUBUĞU ---
+                // ARAMA ÇUBUĞU
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: TextField(
+                    child: const TextField(
                       style: TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: "Ürün ara...",
@@ -327,54 +392,57 @@ class AnaSayfa extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: 20),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Container(
-                    height: 140,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      image: DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                const SizedBox(height: 20),
+
+                // --- OTOMATİK KAYAN SLIDER (CAROUSEL) ALANI ---
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: SizedBox(
+                        height: 150,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          onPageChanged: (int page) {
+                            setState(() {
+                              _currentPage = page;
+                            });
+                          },
+                          itemCount: _carouselItems.length,
+                          itemBuilder: (context, index) {
+                            return _buildCarouselItem(_carouselItems[index]);
+                          },
                         ),
                       ),
-                      padding: EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Yeni Sezon",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    // Dinamik Nokta Göstergeleri (Dots Indicator)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _carouselItems.length,
+                            (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: _currentPage == index ? 24 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: _currentPage == index ? Colors.white : Colors.white.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          Text(
-                            "Koleksiyonu Keşfet",
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                SizedBox(height: 20),
+
+                const SizedBox(height: 20),
+
+                // KATEGORİLER VE ÜRÜNLER KISMI
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(30),
@@ -382,10 +450,9 @@ class AnaSayfa extends StatelessWidget {
                       ),
                     ),
                     child: ListView(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       children: [
-                        // Kategoriler
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
@@ -395,13 +462,12 @@ class AnaSayfa extends StatelessWidget {
                             _buildCategoryItem(Icons.diamond, "Aksesuar"),
                           ],
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                        // Ürün Grid Yapısı
                         GridView.builder(
-                          physics: NeverScrollableScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             childAspectRatio: 0.7,
                             crossAxisSpacing: 15,
@@ -424,44 +490,83 @@ class AnaSayfa extends StatelessWidget {
     );
   }
 
-  // Yardımcı widgetlar (icon color vs) aynı kalacak
-  Widget _buildIconsColor(IconData icon, String title) {
+  // --- YARDIMCI WIDGET: SLIDER ELEMANI ---
+  Widget _buildCarouselItem(Map<String, String> item) {
     return Container(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // İkon için gradyan efekti
-          ShaderMask(
-            shaderCallback: (Rect bounds) {
-              return LinearGradient(
-                begin: Alignment.centerRight,
-                end: Alignment.centerLeft,
-                colors: [gradientStart, gradientEnd],
-              ).createShader(bounds);
-            },
-            child: Icon(icon, size: 24, color: Colors.white),
+      margin: const EdgeInsets.symmetric(horizontal: 5), // Resimler arasına hafif boşluk
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        image: DecorationImage(
+          image: NetworkImage(item["image"]!),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [Colors.black.withOpacity(0.7), Colors.transparent],
           ),
-
-        ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item["title"]!,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
+            Text(
+              item["subtitle"]!,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _buildIconsColor(IconData icon, String title) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ShaderMask(
+          shaderCallback: (Rect bounds) {
+            return LinearGradient(
+              begin: Alignment.centerRight,
+              end: Alignment.centerLeft,
+              colors: [gradientStart, gradientEnd],
+            ).createShader(bounds);
+          },
+          child: Icon(icon, size: 24, color: Colors.white),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCategoryItem(IconData icon, String title) {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Color(0xFFFCE4EC), // Hafif pembe arka plan
+          padding: const EdgeInsets.all(12),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFCE4EC),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: gradientEnd),
         ),
-        SizedBox(height: 5),
-        Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 5),
+        Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
       ],
     );
   }
+
   Widget _buildProductCard(Product product) {
     return Container(
       decoration: BoxDecoration(
@@ -471,20 +576,19 @@ class AnaSayfa extends StatelessWidget {
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Ürün Resmi
           Expanded(
             child: Stack(
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                     image: DecorationImage(
                       image: NetworkImage(product.imageUrl),
                       fit: BoxFit.cover,
@@ -495,8 +599,8 @@ class AnaSayfa extends StatelessWidget {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
@@ -506,22 +610,21 @@ class AnaSayfa extends StatelessWidget {
               ],
             ),
           ),
-          // Ürün Bilgileri
           Padding(
-            padding: EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   product.title,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   product.price,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
               ],
             ),
@@ -542,7 +645,6 @@ class Product {
 
 // Örnek Veri
 List<Product> products = [
-  // ... Ürünler aynı
   Product(
     title: "MonsterXXXL PC",
     price: "₺ 1,231",

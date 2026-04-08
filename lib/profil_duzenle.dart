@@ -1,9 +1,9 @@
-import 'dart:convert'; // Base64 işlemleri için gerekli
-import 'dart:io';      // Dosya işlemleri için gerekli
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Telefon formatı için gerekli
-import 'package:image_picker/image_picker.dart'; // Fotoğraf seçmek için gerekli
-import 'package:task1/auth_service.dart'; // Senin auth servisin
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:task1/auth_service.dart';
 
 class ProfilDuzenle extends StatefulWidget {
   const ProfilDuzenle({Key? key}) : super(key: key);
@@ -28,15 +28,15 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
   final TextEditingController _passwordController = TextEditingController();
 
   // Durum Değişkenleri
-  File? _selectedImage;        // Galeriden yeni seçilen fotoğraf
-  String? _currentBase64Image; // Backend'den gelen mevcut fotoğraf
+  File? _selectedImage;
+  String? _currentBase64Image;
   bool _isPasswordVisible = false;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentData(); // Sayfa açılınca verileri çek
+    _loadCurrentData();
   }
 
   // --- 1. MEVCUT VERİLERİ ÇEKME ---
@@ -49,8 +49,6 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
           _nameController.text = data['fullName'] ?? "";
           _emailController.text = data['email'] ?? "";
           _phoneController.text = data['phone'] ?? "";
-
-          // Backend'den 'profileImage' anahtarıyla base64 string geldiğini varsayıyoruz
           _currentBase64Image = data['profileImage'];
         }
         _isLoading = false;
@@ -58,14 +56,11 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
     }
   }
 
-  // --- 2. GALERİDEN FOTOĞRAF SEÇME ---
-  // --- 2. GALERİDEN FOTOĞRAF SEÇME (Sıkıştırılmış) ---
-  Future<void> _pickImage() async {
+  // --- 2. FOTOĞRAF SEÇME (Kamera veya Galeri) ---
+  Future<void> _pickImage(ImageSource source) async {
     try {
-      // imageQuality: 50 -> Kaliteyi %50 düşür (Gözle görülür fark az olur ama dosya boyutu çok düşer)
-      // maxWidth: 800 -> Fotoğrafın genişliğini maksimum 800 piksel yap
       final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 50,
         maxWidth: 800,
       );
@@ -80,26 +75,83 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
     }
   }
 
-  // --- 3. VERİLERİ KAYDETME ---
+  // --- 3. BOTTOM SHEET İLE FOTOĞRAF KAYNAĞI SEÇTİRME ---
+  void _showImageSourceBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Profil Fotoğrafı Ekle",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: gradientStart.withOpacity(0.1),
+                    child: Icon(Icons.camera_alt, color: gradientStart),
+                  ),
+                  title: const Text("Fotoğraf Çek"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera); // Kamerayı aç
+                  },
+                ),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: gradientStart.withOpacity(0.1),
+                    child: Icon(Icons.photo_library, color: gradientStart),
+                  ),
+                  title: const Text("Galeriden Seç"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery); // Galeriyi aç
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // --- 4. VERİLERİ KAYDETME ---
   Future<void> _saveData() async {
-    if (_isLoading) return; // Çift tıklamayı önle
+    if (_isLoading) return;
 
     setState(() { _isLoading = true; });
 
-    // Fotoğraf seçildiyse Base64 formatına çevir
     String? base64ImageToSend;
     if (_selectedImage != null) {
       List<int> imageBytes = await _selectedImage!.readAsBytes();
       base64ImageToSend = base64Encode(imageBytes);
     }
 
-    // Servise gönder
     bool success = await _authService.updateProfile(
       fullName: _nameController.text,
       email: _emailController.text,
       phone: _phoneController.text,
-      password: _passwordController.text, // Boşsa backend değiştirmez
-      base64Image: base64ImageToSend,     // Yeni fotoğraf varsa gönderilir
+      password: _passwordController.text,
+      base64Image: base64ImageToSend,
     );
 
     if (mounted) {
@@ -109,7 +161,7 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Profil başarıyla güncellendi!")),
         );
-        Navigator.pop(context); // Sayfayı kapat
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Güncelleme sırasında bir hata oluştu.")),
@@ -120,7 +172,6 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
 
   @override
   Widget build(BuildContext context) {
-    // Yükleniyor durumunda dönen çember göster
     if (_isLoading && _nameController.text.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -128,16 +179,33 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text("Profili Düzenle"),
+        title: const Text("Profili Düzenle", style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
+        // Gradient Header
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.centerRight,
               end: Alignment.centerLeft,
               colors: [gradientStart, gradientEnd],
+            ),
+          ),
+        ),
+        // Modern Custom Geri Dönüş Butonu
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2), // Cam (Frosted) efekti
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
             ),
           ),
         ),
@@ -157,7 +225,7 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 4),
-                      color: Colors.grey[300], // Boşken görünecek gri zemin
+                      color: Colors.grey[300],
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.15),
@@ -167,21 +235,28 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
                       ],
                     ),
                     child: ClipOval(
-                      child: _getImageWidget(), // Hangi resmin görüneceğine karar veren fonksiyon
+                      child: _getImageWidget(),
                     ),
                   ),
-                  // Kamera İkonu
+                  // Kamera İkonu (Tıklanınca menü açar)
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: GestureDetector(
-                      onTap: _pickImage, // Tıklayınca galeri açılır
+                      onTap: _showImageSourceBottomSheet, // Galeri/Kamera seçimi
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: gradientStart,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: gradientStart.withOpacity(0.5),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
                         child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                       ),
@@ -213,20 +288,18 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Telefon (Sadece sayı ve max 11 karakter)
                   _buildTextField(
                     controller: _phoneController,
                     label: "Telefon Numarası",
                     icon: Icons.phone,
                     keyboardType: TextInputType.phone,
                     inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly, // Sadece rakam
-                      LengthLimitingTextInputFormatter(11),   // Max 11 hane
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(11),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // Şifre (Göz ikonlu)
                   _buildTextField(
                     controller: _passwordController,
                     label: "Yeni Şifre (Opsiyonel)",
@@ -287,7 +360,6 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
 
   // --- YARDIMCI: Hangi Resim Gösterilecek? ---
   Widget _getImageWidget() {
-    // 1. Yeni fotoğraf seçildiyse onu göster
     if (_selectedImage != null) {
       return Image.file(
         _selectedImage!,
@@ -295,28 +367,23 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
         width: 120,
         height: 120,
       );
-    }
-    // 2. Backend'den gelen bir fotoğraf varsa (Base64) onu göster
-    else if (_currentBase64Image != null && _currentBase64Image!.isNotEmpty) {
+    } else if (_currentBase64Image != null && _currentBase64Image!.isNotEmpty) {
       try {
         return Image.memory(
           base64Decode(_currentBase64Image!),
           fit: BoxFit.cover,
           width: 120,
           height: 120,
-          errorBuilder: (context, error, stackTrace) => _defaultAvatar(), // Hata olursa default
+          errorBuilder: (context, error, stackTrace) => _defaultAvatar(),
         );
       } catch (e) {
         return _defaultAvatar();
       }
-    }
-    // 3. Hiçbiri yoksa varsayılan boş avatarı göster
-    else {
+    } else {
       return _defaultAvatar();
     }
   }
 
-  // Varsayılan boş avatar (Instagram tarzı)
   Widget _defaultAvatar() {
     return Icon(
       Icons.person,
@@ -350,7 +417,7 @@ class _ProfilDuzenleState extends State<ProfilDuzenle> {
         controller: controller,
         obscureText: isPassword && !_isPasswordVisible,
         keyboardType: keyboardType,
-        inputFormatters: inputFormatters, // Formatlayıcılar buraya eklendi
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: Colors.grey[600]),
