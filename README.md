@@ -21,7 +21,7 @@ The project is designed with a focus on modern UI/UX principles, seamless naviga
 
 ## 🎨 UI Previews
 <img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/8e4cf724-48a1-41e8-9a54-f8747c4c0b5b" />
-<img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/bae99763-a453-411f-abc4-023d963df053" />
+<img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/1fc917bc-3f50-478d-9b17-3ae8b855409a" />
 <img width="270" height="735" alt="image" src="https://github.com/user-attachments/assets/c7f43090-0289-4c93-8854-b96c53097075" />
 
 
