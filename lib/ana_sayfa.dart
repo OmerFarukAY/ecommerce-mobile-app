@@ -646,7 +646,7 @@ class Product {
 // Örnek Veri
 List<Product> products = [
   Product(
-    title: "MonsterXXL PC",
+    title: "MonsterXL PC",
     price: "₺ 1,231",
     imageUrl: "https://cdn.britannica.com/77/170477-050-1C747EE3/Laptop-computer.jpg",
   ),
