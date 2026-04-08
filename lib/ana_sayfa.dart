@@ -146,7 +146,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
                                     border: Border.all(color: Colors.white, width: 3),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha:0.2),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       )
@@ -377,7 +377,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: const TextField(
@@ -427,7 +427,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
                           width: _currentPage == index ? 24 : 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: _currentPage == index ? Colors.white : Colors.white.withOpacity(0.4),
+                            color: _currentPage == index ? Colors.white : Colors.white.withValues(alpha:0.4),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -507,7 +507,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
           gradient: LinearGradient(
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
-            colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+            colors: [Colors.black.withValues(alpha:0.7), Colors.transparent],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -574,7 +574,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha:0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -646,7 +646,7 @@ class Product {
 // Örnek Veri
 List<Product> products = [
   Product(
-    title: "MonsterXXXL PC",
+    title: "MonsterXXL PC",
     price: "₺ 1,231",
     imageUrl: "https://cdn.britannica.com/77/170477-050-1C747EE3/Laptop-computer.jpg",
   ),
